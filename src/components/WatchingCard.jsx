@@ -3,18 +3,16 @@ import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { colors } from "../../assets/theme";
 import { Play } from "lucide-react-native";
 
-// Komponen untuk menampilkan film yang sedang ditonton (watching)
-export default function WatchingCard({
-  title,
-  rating,
-  imageUrl,
-  progress,
-  onPress,
-}) {
+// Komponen WatchingCard menerima props dari parent
+export default function WatchingCard({ item, onPress }) {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => onPress(item.id)}
+      activeOpacity={0.8}
+    >
       <Image
-        source={{ uri: imageUrl }}
+        source={{ uri: item.imageUrl }}
         style={styles.image}
         resizeMode="cover"
       />
@@ -24,18 +22,13 @@ export default function WatchingCard({
         </View>
         <View style={styles.info}>
           <Text style={styles.title} numberOfLines={1}>
-            {title}
+            {item.title}
           </Text>
           <View style={styles.ratingContainer}>
             <Text style={styles.star}>⭐</Text>
-            <Text style={styles.rating}>{rating}</Text>
+            <Text style={styles.rating}>{item.rating}</Text>
           </View>
         </View>
-        {progress && (
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${progress}%` }]} />
-          </View>
-        )}
       </View>
     </TouchableOpacity>
   );
@@ -48,7 +41,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
     backgroundColor: colors.white(),
-    // Shadow untuk membuat card terlihat mengapung
     elevation: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -93,17 +85,5 @@ const styles = StyleSheet.create({
     fontFamily: "Pjs-Medium",
     fontSize: 10,
     color: colors.grey(),
-  },
-  progressBar: {
-    height: 3,
-    backgroundColor: colors.grey(0.2),
-    borderRadius: 2,
-    marginTop: 8,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: colors.blue(),
-    borderRadius: 2,
   },
 });

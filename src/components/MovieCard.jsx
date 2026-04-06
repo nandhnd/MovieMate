@@ -2,24 +2,28 @@ import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { colors } from "../../assets/theme";
 
-// Komponen untuk menampilkan kartu movie horizontal
-export default function MovieCard({ title, rating, year, imageUrl, onPress }) {
+// Komponen MovieCard menerima props dari parent
+export default function MovieCard({ item, onPress }) {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => onPress(item.id)}
+      activeOpacity={0.8}
+    >
       <Image
-        source={{ uri: imageUrl }}
+        source={{ uri: item.imageUrl }}
         style={styles.image}
         resizeMode="cover"
       />
       <View style={styles.overlay}>
         <Text style={styles.title} numberOfLines={2}>
-          {title}
+          {item.title}
         </Text>
         <View style={styles.ratingContainer}>
           <Text style={styles.star}>⭐</Text>
-          <Text style={styles.rating}>{rating}</Text>
+          <Text style={styles.rating}>{item.rating}</Text>
         </View>
-        <Text style={styles.year}>{year}</Text>
+        <Text style={styles.year}>{item.year}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -32,7 +36,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
     backgroundColor: colors.white(),
-    // Shadow untuk membuat card terlihat mengapung
     elevation: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },

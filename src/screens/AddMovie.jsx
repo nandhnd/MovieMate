@@ -6,9 +6,9 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   Alert,
 } from "react-native";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { colors } from "../../assets/theme";
 import { Image } from "expo-image";
 import { Plus, X } from "lucide-react-native";
@@ -36,109 +36,114 @@ const AddMovieScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Add New Movie</Text>
-        </View>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Add New Movie</Text>
+          </View>
 
-        {/* Preview Image */}
-        <View style={styles.previewContainer}>
-          {imageUrl ? (
-            <View style={styles.previewWrapper}>
-              <Image
-                source={{ uri: imageUrl }}
-                style={styles.previewImage}
-                contentFit="cover"
-              />
-              <TouchableOpacity
-                style={styles.removeImage}
-                onPress={() => setImageUrl("")}
-              >
-                <X color={colors.white()} size={16} />
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.previewPlaceholder}>
-              <Plus color={colors.grey(0.5)} size={32} />
-              <Text style={styles.previewText}>Movie Poster Preview</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Form */}
-        <View style={styles.form}>
-          <Text style={styles.label}>Title *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter movie title"
-            placeholderTextColor={colors.grey(0.5)}
-            value={title}
-            onChangeText={setTitle}
-          />
-
-          <Text style={styles.label}>Rating *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., 8.5"
-            placeholderTextColor={colors.grey(0.5)}
-            value={rating}
-            onChangeText={setRating}
-            keyboardType="numeric"
-          />
-
-          <Text style={styles.label}>Year *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., 2024"
-            placeholderTextColor={colors.grey(0.5)}
-            value={year}
-            onChangeText={setYear}
-            keyboardType="numeric"
-          />
-
-          <Text style={styles.label}>Category</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.categoryScroll}
-          >
-            {categories.map((cat) => (
-              <TouchableOpacity
-                key={cat}
-                style={[
-                  styles.categoryChip,
-                  category === cat && styles.categoryChipActive,
-                ]}
-                onPress={() => setCategory(cat)}
-              >
-                <Text
-                  style={[
-                    styles.categoryText,
-                    category === cat && styles.categoryTextActive,
-                  ]}
+          {/* Preview Image */}
+          <View style={styles.previewContainer}>
+            {imageUrl ? (
+              <View style={styles.previewWrapper}>
+                <Image
+                  source={{ uri: imageUrl }}
+                  style={styles.previewImage}
+                  contentFit="cover"
+                />
+                <TouchableOpacity
+                  style={styles.removeImage}
+                  onPress={() => setImageUrl("")}
                 >
-                  {cat}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+                  <X color={colors.white()} size={16} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.previewPlaceholder}>
+                <Plus color={colors.grey(0.5)} size={32} />
+                <Text style={styles.previewText}>Movie Poster Preview</Text>
+              </View>
+            )}
+          </View>
 
-          <Text style={styles.label}>Image URL (Poster)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter image URL"
-            placeholderTextColor={colors.grey(0.5)}
-            value={imageUrl}
-            onChangeText={setImageUrl}
-          />
+          {/* Form */}
+          <View style={styles.form}>
+            <Text style={styles.label}>Title *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter movie title"
+              placeholderTextColor={colors.grey(0.5)}
+              value={title}
+              onChangeText={setTitle}
+            />
 
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitText}>Add to Watchlist</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            <Text style={styles.label}>Rating *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., 8.5"
+              placeholderTextColor={colors.grey(0.5)}
+              value={rating}
+              onChangeText={setRating}
+              keyboardType="numeric"
+            />
+
+            <Text style={styles.label}>Year *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., 2024"
+              placeholderTextColor={colors.grey(0.5)}
+              value={year}
+              onChangeText={setYear}
+              keyboardType="numeric"
+            />
+
+            <Text style={styles.label}>Category</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.categoryScroll}
+            >
+              {categories.map((cat) => (
+                <TouchableOpacity
+                  key={cat}
+                  style={[
+                    styles.categoryChip,
+                    category === cat && styles.categoryChipActive,
+                  ]}
+                  onPress={() => setCategory(cat)}
+                >
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      category === cat && styles.categoryTextActive,
+                    ]}
+                  >
+                    {cat}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <Text style={styles.label}>Image URL (Poster)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter image URL"
+              placeholderTextColor={colors.grey(0.5)}
+              value={imageUrl}
+              onChangeText={setImageUrl}
+            />
+
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={handleSubmit}
+            >
+              <Text style={styles.submitText}>Add to Watchlist</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 

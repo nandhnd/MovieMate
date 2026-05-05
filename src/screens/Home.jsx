@@ -4,11 +4,11 @@ import {
   Text,
   View,
   StatusBar,
-  SafeAreaView,
   TouchableOpacity,
   FlatList,
   ScrollView,
 } from "react-native";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Bell } from "lucide-react-native";
 import { colors } from "../../assets/theme";
 import { MovieList } from "../data/movies";
@@ -45,98 +45,100 @@ const HomeScreen = ({ onMoviePress }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.white()} />
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor={colors.white()} />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Hello,</Text>
-          <Text style={styles.appName}>MovieMate</Text>
-        </View>
-        <TouchableOpacity onPress={() => console.log("Notifications")}>
-          <Bell color={colors.black()} size={24} />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Categories */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.categoriesScroll}
-        >
-          {categories.map((cat) => (
-            <CategoryChip
-              key={cat}
-              label={cat}
-              isSelected={selectedCategory === cat}
-              onPress={() => setSelectedCategory(cat)}
-            />
-          ))}
-        </ScrollView>
-
-        {/* Featured Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Featured</Text>
-            <TouchableOpacity onPress={() => console.log("See all")}>
-              <Text style={styles.seeAll}>See All</Text>
-            </TouchableOpacity>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>Hello,</Text>
+            <Text style={styles.appName}>MovieMate</Text>
           </View>
+          <TouchableOpacity onPress={() => console.log("Notifications")}>
+            <Bell color={colors.black()} size={24} />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Categories */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalScroll}
+            style={styles.categoriesScroll}
           >
-            {featuredMovies.map((movie) => (
-              <MovieCard key={movie.id} item={movie} onPress={onMoviePress} />
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Continue Watching */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Continue Watching</Text>
-            <TouchableOpacity onPress={() => console.log("See all")}>
-              <Text style={styles.seeAll}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalScroll}
-          >
-            {watchingMovies.map((movie) => (
-              <WatchingCard
-                key={movie.id}
-                item={movie}
-                onPress={onMoviePress}
+            {categories.map((cat) => (
+              <CategoryChip
+                key={cat}
+                label={cat}
+                isSelected={selectedCategory === cat}
+                onPress={() => setSelectedCategory(cat)}
               />
             ))}
-            <AddMovieCard onPress={() => console.log("Add movie")} />
           </ScrollView>
-        </View>
 
-        {/* Recommended */}
-        <View style={[styles.section, styles.lastSection]}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recommended for You</Text>
-            <Text style={styles.categoryLabel}>{selectedCategory}</Text>
+          {/* Featured Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Featured</Text>
+              <TouchableOpacity onPress={() => console.log("See all")}>
+                <Text style={styles.seeAll}>See All</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalScroll}
+            >
+              {featuredMovies.map((movie) => (
+                <MovieCard key={movie.id} item={movie} onPress={onMoviePress} />
+              ))}
+            </ScrollView>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalScroll}
-          >
-            {recommendedMovies.map((movie) => (
-              <MovieCard key={movie.id} item={movie} onPress={onMoviePress} />
-            ))}
-          </ScrollView>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+
+          {/* Continue Watching */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Continue Watching</Text>
+              <TouchableOpacity onPress={() => console.log("See all")}>
+                <Text style={styles.seeAll}>See All</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalScroll}
+            >
+              {watchingMovies.map((movie) => (
+                <WatchingCard
+                  key={movie.id}
+                  item={movie}
+                  onPress={onMoviePress}
+                />
+              ))}
+              <AddMovieCard onPress={() => console.log("Add movie")} />
+            </ScrollView>
+          </View>
+
+          {/* Recommended */}
+          <View style={[styles.section, styles.lastSection]}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Recommended for You</Text>
+              <Text style={styles.categoryLabel}>{selectedCategory}</Text>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalScroll}
+            >
+              {recommendedMovies.map((movie) => (
+                <MovieCard key={movie.id} item={movie} onPress={onMoviePress} />
+              ))}
+            </ScrollView>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 

@@ -1,13 +1,15 @@
 import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { colors } from "../../assets/theme";
 
-// Komponen MovieCard menerima props dari parent
-export default function MovieCard({ item, onPress }) {
+export default function MovieCard({ item }) {
+  const navigation = useNavigation();
+
   return (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => onPress(item.id)}
+      onPress={() => navigation.navigate("MovieDetail", { movieId: item.id })}
       activeOpacity={0.8}
     >
       <Image

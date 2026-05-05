@@ -5,8 +5,8 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
 } from "react-native";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Settings, Heart, Clock, Star } from "lucide-react-native";
 import { Image } from "expo-image";
 import { colors } from "../../assets/theme";
@@ -36,70 +36,74 @@ const ProfileScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Profile</Text>
-          <TouchableOpacity onPress={() => console.log("Settings")}>
-            <Settings color={colors.black()} size={24} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Profile Info */}
-        <View style={styles.profileSection}>
-          <Image
-            source={{ uri: ProfileData.profilePict }}
-            style={styles.avatar}
-            contentFit="cover"
-          />
-          <Text style={styles.name}>{ProfileData.name}</Text>
-          <Text style={styles.username}>{ProfileData.username}</Text>
-          <Text style={styles.joinDate}>Joined {ProfileData.createdAt}</Text>
-        </View>
-
-        {/* Stats */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Heart color={colors.blue()} size={22} />
-            <Text style={styles.statNumber}>{ProfileData.watchlistCount}</Text>
-            <Text style={styles.statLabel}>Watchlist</Text>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Profile</Text>
+            <TouchableOpacity onPress={() => console.log("Settings")}>
+              <Settings color={colors.black()} size={24} />
+            </TouchableOpacity>
           </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Clock color={colors.blue()} size={22} />
-            <Text style={styles.statNumber}>{ProfileData.watchedCount}</Text>
-            <Text style={styles.statLabel}>Watched</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Star color={colors.blue()} size={22} />
-            <Text style={styles.statNumber}>{ProfileData.reviewsCount}</Text>
-            <Text style={styles.statLabel}>Reviews</Text>
-          </View>
-        </View>
 
-        {/* Edit Profile Button */}
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => console.log("Edit profile")}
-        >
-          <Text style={styles.editButtonText}>Edit Profile</Text>
-        </TouchableOpacity>
-
-        {/* Recent Activity */}
-        <View style={styles.recentSection}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
-          {recentActivity.map((item) => (
-            <ItemMovie
-              key={item.id}
-              item={item}
-              onPress={() => console.log(item.id)}
+          {/* Profile Info */}
+          <View style={styles.profileSection}>
+            <Image
+              source={{ uri: ProfileData.profilePict }}
+              style={styles.avatar}
+              contentFit="cover"
             />
-          ))}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            <Text style={styles.name}>{ProfileData.name}</Text>
+            <Text style={styles.username}>{ProfileData.username}</Text>
+            <Text style={styles.joinDate}>Joined {ProfileData.createdAt}</Text>
+          </View>
+
+          {/* Stats */}
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Heart color={colors.blue()} size={22} />
+              <Text style={styles.statNumber}>
+                {ProfileData.watchlistCount}
+              </Text>
+              <Text style={styles.statLabel}>Watchlist</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Clock color={colors.blue()} size={22} />
+              <Text style={styles.statNumber}>{ProfileData.watchedCount}</Text>
+              <Text style={styles.statLabel}>Watched</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Star color={colors.blue()} size={22} />
+              <Text style={styles.statNumber}>{ProfileData.reviewsCount}</Text>
+              <Text style={styles.statLabel}>Reviews</Text>
+            </View>
+          </View>
+
+          {/* Edit Profile Button */}
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => console.log("Edit profile")}
+          >
+            <Text style={styles.editButtonText}>Edit Profile</Text>
+          </TouchableOpacity>
+
+          {/* Recent Activity */}
+          <View style={styles.recentSection}>
+            <Text style={styles.sectionTitle}>Recent Activity</Text>
+            {recentActivity.map((item) => (
+              <ItemMovie
+                key={item.id}
+                item={item}
+                onPress={() => console.log(item.id)}
+              />
+            ))}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 

@@ -1,12 +1,16 @@
+import React from "react";
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { colors } from "../../assets/theme";
 
-const ItemMovie = ({ item, onPress }) => {
+const ItemMovie = ({ item }) => {
+  const navigation = useNavigation();
+
   return (
     <TouchableOpacity
       style={styles.cardItem}
-      onPress={onPress}
+      onPress={() => navigation.navigate("MovieDetail", { movieId: item.id })}
       activeOpacity={0.8}
     >
       <Image

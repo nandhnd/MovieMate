@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, FlatList, SafeAreaView } from "react-native";
+import { StyleSheet, Text, View, FlatList } from "react-native";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { colors } from "../../assets/theme";
 import { MovieList } from "../data/movies";
 import SearchBar from "../components/SearchBar";
@@ -21,37 +22,39 @@ const SearchScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <SearchBar
-        placeholder="Search movies..."
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      />
-
-      {searchQuery === "" ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyTitle}>Search for movies</Text>
-          <Text style={styles.emptyText}>
-            Find your favorite movies by title
-          </Text>
-        </View>
-      ) : filteredMovies.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyTitle}>No results found</Text>
-          <Text style={styles.emptyText}>
-            Try searching with different keywords
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredMovies}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <SearchBar
+          placeholder="Search movies..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
         />
-      )}
-    </SafeAreaView>
+
+        {searchQuery === "" ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyTitle}>Search for movies</Text>
+            <Text style={styles.emptyText}>
+              Find your favorite movies by title
+            </Text>
+          </View>
+        ) : filteredMovies.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyTitle}>No results found</Text>
+            <Text style={styles.emptyText}>
+              Try searching with different keywords
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredMovies}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 

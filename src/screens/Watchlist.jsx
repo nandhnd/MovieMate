@@ -1,5 +1,6 @@
 import React from "react";
-import { StyleSheet, Text, View, FlatList, SafeAreaView } from "react-native";
+import { StyleSheet, Text, View, FlatList } from "react-native";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { colors } from "../../assets/theme";
 import { MovieList } from "../data/movies";
 import ItemMovie from "../components/ItemMovie";
@@ -16,27 +17,29 @@ const WatchlistScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>My Watchlist</Text>
-        <Text style={styles.count}>{watchlistData.length} movies</Text>
-      </View>
-
-      {watchlistData.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyTitle}>Your watchlist is empty</Text>
-          <Text style={styles.emptyText}>Add movies to watch later</Text>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>My Watchlist</Text>
+          <Text style={styles.count}>{watchlistData.length} movies</Text>
         </View>
-      ) : (
-        <FlatList
-          data={watchlistData}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
-    </SafeAreaView>
+
+        {watchlistData.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyTitle}>Your watchlist is empty</Text>
+            <Text style={styles.emptyText}>Add movies to watch later</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={watchlistData}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 

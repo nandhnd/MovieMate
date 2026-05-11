@@ -6,7 +6,6 @@ import {
   FlatList,
   SafeAreaView,
   Animated,
-  TouchableOpacity,
 } from "react-native";
 import { colors } from "../../assets/theme";
 import { MovieList } from "../data/movies";
@@ -14,69 +13,58 @@ import SearchBar from "../components/SearchBar";
 import ItemMovie from "../components/ItemMovie";
 
 const SearchScreen = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchPhrase, setSearchPhrase] = useState("");
 
-  // Animasi untuk search bar
-  const searchAnim = useRef(new Animated.Value(0)).current;
-  const listAnim = useRef(new Animated.Value(0)).current;
+  // Animasi fade in
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(searchAnim, {
+      Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 500,
         useNativeDriver: true,
       }),
-      Animated.timing(listAnim, {
+      Animated.spring(scaleAnim, {
         toValue: 1,
-        duration: 400,
-        delay: 200,
+        friction: 8,
         useNativeDriver: true,
       }),
     ]).start();
   }, []);
 
-  const filteredMovies = MovieList.filter((movie) =>
-    movie.title.toLowerCase().includes(searchQuery.toLowerCase()),
+  // Filter film berdasarkan pencarian (title atau category)
+  const filteredMovies = MovieList.filter(
+    (movie) =>
+      movie.title.toLowerCase().includes(searchPhrase.toLowerCase()) ||
+      movie.category.toLowerCase().includes(searchPhrase.toLowerCase()),
   );
 
-  const renderItem = ({ item, index }) => <ItemMovie item={item} />;
+  const renderItem = ({ item }) => <ItemMovie item={item} />;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Animated.View
-        style={{
-          transform: [
-            {
-              translateY: searchAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [-50, 0],
-              }),
-            },
-          ],
-          opacity: searchAnim,
-        }}
-      >
+    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
+      <View style={styles.header}>
         <SearchBar
-          placeholder="Search movies..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
+          searchPhrase={searchPhrase}
+          setSearchPhrase={setSearchPhrase}
         />
-      </Animated.View>
+      </View>
 
-      {searchQuery === "" ? (
+      {searchPhrase === "" ? (
         <Animated.View
           style={[
             styles.emptyContainer,
             {
-              opacity: listAnim,
-              transform: [{ scale: listAnim }],
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
             },
           ]}
         >
           <Text style={styles.emptyTitle}>Search for movies</Text>
           <Text style={styles.emptyText}>
-            Find your favorite movies by title
+            Find your favorite movies by title or category
           </Text>
         </Animated.View>
       ) : filteredMovies.length === 0 ? (
@@ -87,13 +75,12 @@ const SearchScreen = () => {
           </Text>
         </View>
       ) : (
-        <Animated.FlatList
+        <FlatList
           data={filteredMovies}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
-          style={{ opacity: listAnim }}
         />
       )}
     </SafeAreaView>
@@ -105,6 +92,12 @@ export default SearchScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.white(),
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 8,
     backgroundColor: colors.white(),
   },
   listContainer: {

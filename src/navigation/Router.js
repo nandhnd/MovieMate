@@ -14,11 +14,13 @@ import WatchlistScreen from "../screens/Watchlist";
 import AddMovieScreen from "../screens/AddMovie";
 import ProfileScreen from "../screens/Profile";
 import MovieDetail from "../screens/MovieDetail";
+import Login from "../screens/Login";
+import Register from "../screens/Register";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-// Bottom Tab Navigator untuk menu utama
+// Bottom Tab Navigator
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -50,7 +52,6 @@ function MainTabs() {
           tabBarIcon: ({ color }) => <Home color={color} size={24} />,
         }}
       />
-
       <Tab.Screen
         name="Search"
         component={SearchScreen}
@@ -59,7 +60,6 @@ function MainTabs() {
           tabBarIcon: ({ color }) => <Search color={color} size={24} />,
         }}
       />
-
       <Tab.Screen
         name="Add"
         component={AddMovieScreen}
@@ -68,7 +68,6 @@ function MainTabs() {
           tabBarIcon: ({ color }) => <PlusSquare color={color} size={24} />,
         }}
       />
-
       <Tab.Screen
         name="Watchlist"
         component={WatchlistScreen}
@@ -77,7 +76,6 @@ function MainTabs() {
           tabBarIcon: ({ color }) => <Heart color={color} size={24} />,
         }}
       />
-
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
@@ -90,18 +88,43 @@ function MainTabs() {
   );
 }
 
-// Stack Navigator untuk navigasi antar halaman
+// Stack Navigator
 const Router = () => {
   return (
     <Stack.Navigator
+      initialRouteName="Login"
       screenOptions={{
         headerShown: false,
       }}
     >
-      {/* Main Tab Navigator */}
-      <Stack.Screen name="MainTabs" component={MainTabs} />
+      {/* Auth Screens */}
+      <Stack.Screen
+        name="Login"
+        component={Login}
+        options={{
+          animationEnabled: true,
+          ...TransitionPresets.SlideFromRightIOS,
+        }}
+      />
+      <Stack.Screen
+        name="Register"
+        component={Register}
+        options={{
+          animationEnabled: true,
+          ...TransitionPresets.SlideFromRightIOS,
+        }}
+      />
 
-      {/* Detail Screen dengan animasi slide */}
+      {/* Main App */}
+      <Stack.Screen
+        name="MainTabs"
+        component={MainTabs}
+        options={{
+          animationEnabled: true,
+        }}
+      />
+
+      {/* Detail Screen */}
       <Stack.Screen
         name="MovieDetail"
         component={MovieDetail}

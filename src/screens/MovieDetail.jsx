@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -6,8 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  Animated,
 } from "react-native";
-import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Image } from "expo-image";
 import {
@@ -21,16 +22,6 @@ import {
 import { colors } from "../../assets/theme";
 import { MovieList } from "../data/movies";
 
-const formatNumber = (number) => {
-  if (number >= 1000000) {
-    return (number / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
-  }
-  if (number >= 1000) {
-    return (number / 1000).toFixed(1).replace(/\.0$/, "") + "K";
-  }
-  return number.toString();
-};
-
 const MovieDetail = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -39,106 +30,167 @@ const MovieDetail = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
 
-  const movie = MovieList.find((m) => m.id === movieId);
+  // Animasi scroll
+  const scrollY = useRef(new Animated.Value(0)).current;
 
+  const movie = MovieList.find((m) => m.id === movieId);
   if (!movie) return null;
 
-  return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor={colors.white()} />
+  // Animasi diffClamp untuk header dan bottom bar
+  const diffClampY = Animated.diffClamp(scrollY, 0, 80);
 
-        {/* Header dengan tombol back */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <ArrowLeft color={colors.black()} size={24} />
-          </TouchableOpacity>
-          <View style={styles.headerRight}>
-            <TouchableOpacity onPress={() => console.log("Share")}>
-              <Share2 color={colors.grey(0.6)} size={22} />
-            </TouchableOpacity>
+  // Header translateY: bergerak ke atas saat scroll
+  const headerTranslate = diffClampY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [0, -60],
+    extrapolate: "clamp",
+  });
+
+  // Header opacity: menghilang saat scroll
+  const headerOpacity = diffClampY.interpolate({
+    inputRange: [0, 40, 80],
+    outputRange: [1, 0.5, 0],
+    extrapolate: "clamp",
+  });
+
+  // Bottom bar translateY: bergerak ke bawah saat scroll
+  const bottomBarTranslate = diffClampY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [0, 100],
+    extrapolate: "clamp",
+  });
+
+  // Animasi pulse untuk tombol like
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  const handleLikePress = () => {
+    Animated.sequence([
+      Animated.timing(pulseAnim, {
+        toValue: 1.3,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(pulseAnim, {
+        toValue: 1,
+        friction: 3,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    setIsLiked(!isLiked);
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white()} />
+
+      {/* Animated Header */}
+      <Animated.View
+        style={[
+          styles.header,
+          {
+            transform: [{ translateY: headerTranslate }],
+            opacity: headerOpacity,
+          },
+        ]}
+      >
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <ArrowLeft color={colors.black()} size={24} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => console.log("Share")}>
+          <Share2 color={colors.grey(0.6)} size={22} />
+        </TouchableOpacity>
+      </Animated.View>
+
+      {/* Animated ScrollView */}
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true },
+        )}
+        scrollEventThrottle={16}
+      >
+        {/* Poster Film */}
+        <Image
+          style={styles.poster}
+          source={{ uri: movie.imageUrl }}
+          contentFit="cover"
+          transition={300}
+        />
+
+        {/* Info Film */}
+        <View style={styles.content}>
+          <Text style={styles.title}>{movie.title}</Text>
+
+          <View style={styles.ratingRow}>
+            <Star size={16} color={colors.blue()} fill={colors.blue()} />
+            <Text style={styles.rating}>{movie.rating} / 10</Text>
+            <Text style={styles.year}>{movie.year}</Text>
+          </View>
+
+          <View style={styles.categoryBadge}>
+            <Text style={styles.categoryText}>{movie.category}</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Synopsis</Text>
+            <Text style={styles.synopsis}>
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+              enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat.
+            </Text>
+          </View>
+
+          <View style={styles.infoSection}>
+            <View style={styles.infoItem}>
+              <Clock size={16} color={colors.grey()} />
+              <Text style={styles.infoText}>Duration: 2h 30m</Text>
+            </View>
           </View>
         </View>
+      </Animated.ScrollView>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Poster Film */}
-          <Image
-            style={styles.poster}
-            source={{ uri: movie.imageUrl }}
-            contentFit="cover"
-            transition={300}
-          />
-
-          {/* Info Film */}
-          <View style={styles.content}>
-            <Text style={styles.title}>{movie.title}</Text>
-
-            <View style={styles.ratingRow}>
-              <Star size={16} color={colors.blue()} fill={colors.blue()} />
-              <Text style={styles.rating}>{movie.rating} / 10</Text>
-              <Text style={styles.year}>{movie.year}</Text>
-            </View>
-
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>{movie.category}</Text>
-            </View>
-
-            {/* Sinopsis */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Synopsis</Text>
-              <Text style={styles.synopsis}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim veniam, quis nostrud exercitation ullamco laboris
-                nisi ut aliquip ex ea commodo consequat.
-              </Text>
-            </View>
-
-            {/* Info Tambahan */}
-            <View style={styles.infoSection}>
-              <View style={styles.infoItem}>
-                <Clock size={16} color={colors.grey()} />
-                <Text style={styles.infoText}>Duration: 2h 30m</Text>
-              </View>
-            </View>
-          </View>
-        </ScrollView>
-
-        {/* Bottom Bar dengan aksi */}
-        <View style={styles.bottomBar}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => setIsLiked(!isLiked)}
-          >
+      {/* Animated Bottom Bar */}
+      <Animated.View
+        style={[
+          styles.bottomBar,
+          {
+            transform: [{ translateY: bottomBarTranslate }],
+          },
+        ]}
+      >
+        <TouchableOpacity style={styles.actionButton} onPress={handleLikePress}>
+          <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
             <Heart
               color={isLiked ? colors.blue() : colors.grey(0.6)}
               fill={isLiked ? colors.blue() : "none"}
               size={24}
             />
-            <Text style={styles.actionText}>Like</Text>
-          </TouchableOpacity>
+          </Animated.View>
+          <Text style={styles.actionText}>Like</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => setIsBookmarked(!isBookmarked)}
-          >
-            <Bookmark
-              color={isBookmarked ? colors.blue() : colors.grey(0.6)}
-              fill={isBookmarked ? colors.blue() : "none"}
-              size={24}
-            />
-            <Text style={styles.actionText}>Save</Text>
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => setIsBookmarked(!isBookmarked)}
+        >
+          <Bookmark
+            color={isBookmarked ? colors.blue() : colors.grey(0.6)}
+            fill={isBookmarked ? colors.blue() : "none"}
+            size={24}
+          />
+          <Text style={styles.actionText}>Save</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.watchButton}
-            onPress={() => console.log("Watch now")}
-          >
-            <Text style={styles.watchButtonText}>Watch Now</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    </SafeAreaProvider>
+        <TouchableOpacity
+          style={styles.watchButton}
+          onPress={() => console.log("Watch now")}
+        >
+          <Text style={styles.watchButtonText}>Watch Now</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </SafeAreaView>
   );
 };
 
@@ -160,11 +212,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 10,
-    backgroundColor: "transparent",
-  },
-  headerRight: {
-    flexDirection: "row",
-    gap: 16,
+    backgroundColor: "rgba(255,255,255,0.9)",
   },
   poster: {
     width: "100%",

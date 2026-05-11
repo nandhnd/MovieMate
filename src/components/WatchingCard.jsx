@@ -1,5 +1,12 @@
-import React from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useRef, useEffect } from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { colors } from "../../assets/theme";
 import { Play } from "lucide-react-native";
@@ -7,32 +14,76 @@ import { Play } from "lucide-react-native";
 export default function WatchingCard({ item }) {
   const navigation = useNavigation();
 
+  // Animasi fade in
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 6,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.97,
+      friction: 5,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 5,
+      useNativeDriver: true,
+    }).start();
+  };
+
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => navigation.navigate("MovieDetail", { movieId: item.id })}
-      activeOpacity={0.8}
+    <Animated.View
+      style={{
+        opacity: fadeAnim,
+        transform: [{ scale: scaleAnim }],
+      }}
     >
-      <Image
-        source={{ uri: item.imageUrl }}
-        style={styles.image}
-        resizeMode="cover"
-      />
-      <View style={styles.overlay}>
-        <View style={styles.playButton}>
-          <Play color={colors.white()} size={16} />
-        </View>
-        <View style={styles.info}>
-          <Text style={styles.title} numberOfLines={1}>
-            {item.title}
-          </Text>
-          <View style={styles.ratingContainer}>
-            <Text style={styles.star}>⭐</Text>
-            <Text style={styles.rating}>{item.rating}</Text>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => navigation.navigate("MovieDetail", { movieId: item.id })}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={0.9}
+      >
+        <Image
+          source={{ uri: item.imageUrl }}
+          style={styles.image}
+          resizeMode="cover"
+        />
+        <View style={styles.overlay}>
+          <View style={styles.playButton}>
+            <Play color={colors.white()} size={16} />
+          </View>
+          <View style={styles.info}>
+            <Text style={styles.title} numberOfLines={1}>
+              {item.title}
+            </Text>
+            <View style={styles.ratingContainer}>
+              <Text style={styles.star}>⭐</Text>
+              <Text style={styles.rating}>{item.rating}</Text>
+            </View>
           </View>
         </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 

@@ -6,6 +6,18 @@ import { colors } from "../../assets/theme";
 export default function MovieCard({ item }) {
   const navigation = useNavigation();
 
+  // Konversi data TMDB ke format yang digunakan komponen
+  const movieData = {
+    id: item.id,
+    title: item.title,
+    rating: item.vote_average?.toFixed(1) || "0",
+    year: item.release_date ? new Date(item.release_date).getFullYear() : "N/A",
+    imageUrl: item.poster_path
+      ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+      : "https://via.placeholder.com/500x750?text=No+Image",
+    category: "Movie",
+  };
+
   return (
     <TouchableOpacity
       style={styles.card}
@@ -13,19 +25,19 @@ export default function MovieCard({ item }) {
       activeOpacity={0.8}
     >
       <Image
-        source={{ uri: item.imageUrl }}
+        source={{ uri: movieData.imageUrl }}
         style={styles.image}
         resizeMode="cover"
       />
       <View style={styles.overlay}>
         <Text style={styles.title} numberOfLines={2}>
-          {item.title}
+          {movieData.title}
         </Text>
         <View style={styles.ratingContainer}>
           <Text style={styles.star}>⭐</Text>
-          <Text style={styles.rating}>{item.rating}</Text>
+          <Text style={styles.rating}>{movieData.rating}</Text>
         </View>
-        <Text style={styles.year}>{item.year}</Text>
+        <Text style={styles.year}>{movieData.year}</Text>
       </View>
     </TouchableOpacity>
   );

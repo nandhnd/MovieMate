@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,46 +8,91 @@ import {
   TouchableOpacity,
   ScrollView,
   Animated,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { Bell } from "lucide-react-native";
 import { colors } from "../../assets/theme";
-import { MovieList } from "../data/movies";
+import { getTrendingMovies, getPopularMovies } from "../services/tmdbApi";
+import { getWatchlist } from "../services/watchlistApi";
 import MovieCard from "../components/MovieCard";
 import WatchingCard from "../components/WatchingCard";
 import AddMovieCard from "../components/AddMovieCard";
 
-const categories = ["All", "Popular", "Top Rated", "Action", "Drama", "Comedy"];
+const categories = [
+  "All",
+  "Trending",
+  "Popular",
+  "Top Rated",
+  "Action",
+  "Drama",
+];
 
 const HomeScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [trendingMovies, setTrendingMovies] = useState([]);
+  const [popularMovies, setPopularMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [watchlist, setWatchlist] = useState([]);
 
-  // Animasi untuk header dan bottom tab
   const scrollY = useRef(new Animated.Value(0)).current;
 
+  // Ambil data dari TMDB API
+  const fetchMovies = async () => {
+    try {
+      const trending = await getTrendingMovies();
+      const popular = await getPopularMovies();
+      setTrendingMovies(trending);
+      setPopularMovies(popular.results);
+    } catch (error) {
+      console.error("Error fetching movies:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Ambil watchlist dari MockAPI
+  const fetchWatchlist = async () => {
+    try {
+      const data = await getWatchlist();
+      setWatchlist(data);
+    } catch (error) {
+      console.error("Error fetching watchlist:", error);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchMovies();
+      fetchWatchlist();
+    }, []),
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchMovies();
+    await fetchWatchlist();
+    setRefreshing(false);
+  };
+
   // Filter film berdasarkan kategori
-  const filteredMovies =
-    selectedCategory === "All"
-      ? MovieList
-      : MovieList.filter((movie) => movie.category === selectedCategory);
+  const getFilteredMovies = () => {
+    if (selectedCategory === "Trending") return trendingMovies;
+    if (selectedCategory === "Popular") return popularMovies;
+    return trendingMovies; // Default
+  };
 
-  const featuredMovies = MovieList.slice(0, 5);
-  const watchingMovies = MovieList.filter((m) => m.rating > 8.0).slice(0, 3);
-  const recommendedMovies = filteredMovies.slice(0, 6);
+  const filteredMovies = getFilteredMovies();
+  const featuredMovies = trendingMovies.slice(0, 5);
+  const recommendedMovies = popularMovies.slice(0, 6);
 
-  // Animasi diffClamp untuk header (menyembunyikan saat scroll ke bawah)
-  const diffClampY = Animated.diffClamp(scrollY, 0, 120);
-
-  // Header translateY: bergerak ke atas saat scroll
+  // Animasi header
+  const diffClampY = Animated.diffClamp(scrollY, 0, 100);
   const headerTranslate = diffClampY.interpolate({
-    inputRange: [0, 120],
-    outputRange: [0, -80],
-    extrapolate: "clamp",
-  });
-
-  // Opacity header: semakin kecil saat scroll
-  const headerOpacity = diffClampY.interpolate({
-    inputRange: [0, 60, 120],
-    outputRange: [1, 0.5, 0],
+    inputRange: [0, 100],
+    outputRange: [0, -70],
     extrapolate: "clamp",
   });
 
@@ -63,6 +108,14 @@ const HomeScreen = () => {
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.blue()} />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.white()} />
@@ -71,10 +124,7 @@ const HomeScreen = () => {
       <Animated.View
         style={[
           styles.header,
-          {
-            transform: [{ translateY: headerTranslate }],
-            opacity: headerOpacity,
-          },
+          { transform: [{ translateY: headerTranslate }] },
         ]}
       >
         <View>
@@ -95,6 +145,9 @@ const HomeScreen = () => {
         )}
         scrollEventThrottle={16}
         contentContainerStyle={{ paddingTop: 100 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         {/* Categories */}
         <ScrollView
@@ -116,10 +169,7 @@ const HomeScreen = () => {
         {/* Featured Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Featured</Text>
-            <TouchableOpacity onPress={() => console.log("See all")}>
-              <Text style={styles.seeAll}>See All</Text>
-            </TouchableOpacity>
+            <Text style={styles.sectionTitle}>Trending This Week</Text>
           </View>
           <ScrollView
             horizontal
@@ -127,36 +177,32 @@ const HomeScreen = () => {
             contentContainerStyle={styles.horizontalScroll}
           >
             {featuredMovies.map((movie, index) => (
-              <MovieCard key={movie.id} item={movie} index={index} />
+              <MovieCard key={movie.id} item={movie} />
             ))}
           </ScrollView>
         </View>
 
-        {/* Continue Watching */}
+        {/* Continue Watching Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Continue Watching</Text>
-            <TouchableOpacity onPress={() => console.log("See all")}>
-              <Text style={styles.seeAll}>See All</Text>
-            </TouchableOpacity>
           </View>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalScroll}
           >
-            {watchingMovies.map((movie) => (
+            {watchlist.slice(0, 3).map((movie) => (
               <WatchingCard key={movie.id} item={movie} />
             ))}
             <AddMovieCard onPress={() => console.log("Add movie")} />
           </ScrollView>
         </View>
 
-        {/* Recommended */}
+        {/* Recommended Section */}
         <View style={[styles.section, styles.lastSection]}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recommended for You</Text>
-            <Text style={styles.categoryLabel}>{selectedCategory}</Text>
+            <Text style={styles.sectionTitle}>Popular Movies</Text>
           </View>
           <ScrollView
             horizontal
@@ -164,7 +210,7 @@ const HomeScreen = () => {
             contentContainerStyle={styles.horizontalScroll}
           >
             {recommendedMovies.map((movie, index) => (
-              <MovieCard key={movie.id} item={movie} index={index} />
+              <MovieCard key={movie.id} item={movie} />
             ))}
           </ScrollView>
         </View>
@@ -178,6 +224,12 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.white(),
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: colors.white(),
   },
   header: {
@@ -242,16 +294,6 @@ const styles = StyleSheet.create({
     fontFamily: "Pjs-Bold",
     fontSize: 18,
     color: colors.black(),
-  },
-  categoryLabel: {
-    fontFamily: "Pjs-Medium",
-    fontSize: 12,
-    color: colors.blue(),
-  },
-  seeAll: {
-    fontFamily: "Pjs-Medium",
-    fontSize: 13,
-    color: colors.blue(),
   },
   horizontalScroll: {
     paddingLeft: 24,

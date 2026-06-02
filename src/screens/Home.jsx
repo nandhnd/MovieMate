@@ -4,21 +4,19 @@ import {
   Text,
   View,
   StatusBar,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   Animated,
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { Bell } from "lucide-react-native";
 import { colors } from "../../assets/theme";
 import { getTrendingMovies, getPopularMovies } from "../services/tmdbApi";
 import { getWatchlist } from "../services/watchlistApi";
 import MovieCard from "../components/MovieCard";
-import WatchingCard from "../components/WatchingCard";
-import AddMovieCard from "../components/AddMovieCard";
 
 const categories = [
   "All",
@@ -182,23 +180,6 @@ const HomeScreen = () => {
           </ScrollView>
         </View>
 
-        {/* Continue Watching Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Continue Watching</Text>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalScroll}
-          >
-            {watchlist.slice(0, 3).map((movie) => (
-              <WatchingCard key={movie.id} item={movie} />
-            ))}
-            <AddMovieCard onPress={() => console.log("Add movie")} />
-          </ScrollView>
-        </View>
-
         {/* Recommended Section */}
         <View style={[styles.section, styles.lastSection]}>
           <View style={styles.sectionHeader}>
@@ -223,6 +204,7 @@ export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: 30,
     flex: 1,
     backgroundColor: colors.white(),
   },

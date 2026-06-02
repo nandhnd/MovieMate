@@ -4,7 +4,7 @@ import { Search, ArrowLeft, X } from "lucide-react-native";
 import { colors } from "../../assets/theme";
 import { useNavigation } from "@react-navigation/native";
 
-const SearchBar = ({ searchPhrase, setSearchPhrase }) => {
+const SearchBar = ({ searchPhrase, setSearchPhrase, clearSearch }) => {
   const navigation = useNavigation();
   const animation = useRef(new Animated.Value(0)).current;
 
@@ -15,6 +15,14 @@ const SearchBar = ({ searchPhrase, setSearchPhrase }) => {
       useNativeDriver: false,
     }).start();
   }, []);
+
+  const handleClear = () => {
+    if (clearSearch) {
+      clearSearch();
+    } else {
+      setSearchPhrase("");
+    }
+  };
 
   return (
     <Animated.View
@@ -64,11 +72,10 @@ const SearchBar = ({ searchPhrase, setSearchPhrase }) => {
           autoCorrect={false}
           autoFocus={true}
           returnKeyType="search"
-          clearButtonMode="while-editing"
         />
-        {searchPhrase && (
+        {searchPhrase.length > 0 && (
           <Pressable
-            onPress={() => setSearchPhrase("")}
+            onPress={handleClear}
             style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
           >
             <X size={18} color={colors.black()} />
@@ -86,6 +93,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-start",
     alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: colors.white(),
   },
   bar: {
     flexDirection: "row",

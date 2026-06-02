@@ -6,7 +6,6 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
@@ -14,10 +13,10 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { colors } from "../../assets/theme";
 import { supabase } from "../libs/supabase";
 import { Image } from "expo-image";
-import { Trash2, Eye, CheckCircle } from "lucide-react-native";
+import { Star } from "lucide-react-native";
 
-const WatchlistScreen = () => {
-  const [watchlist, setWatchlist] = useState([]);
+const WatchedScreen = () => {
+  const [watched, setWatched] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [session, setSession] = useState(null);
@@ -35,91 +34,54 @@ const WatchlistScreen = () => {
     } = await supabase.auth.getSession();
     setSession(session);
     if (session) {
-      fetchWatchlist(session.user.id);
+      fetchWatched(session.user.id);
     } else {
       setLoading(false);
     }
   };
 
-  // Ambil watchlist yang belum ditonton
-  const fetchWatchlist = async (userId) => {
+  const fetchWatched = async (userId) => {
     try {
-      // 1. Ambil semua film di watchlist
-      const { data: watchlistData, error: watchlistError } = await supabase
-        .from("watchlist")
+      const { data, error } = await supabase
+        .from("watched")
         .select("*")
         .eq("user_id", userId)
-        .order("added_at", { ascending: false });
+        .order("watched_at", { ascending: false });
 
-      if (watchlistError) throw watchlistError;
-
-      // 2. Ambil semua film yang sudah ditonton
-      const { data: watchedData, error: watchedError } = await supabase
-        .from("watched")
-        .select("movie_id")
-        .eq("user_id", userId);
-
-      if (watchedError) throw watchedError;
-
-      // 3. Buat set movie_id yang sudah ditonton
-      const watchedMovieIds = new Set(
-        watchedData?.map((item) => item.movie_id) || [],
-      );
-
-      // 4. Filter: hanya tampilkan film yang BELUM ditonton
-      const filteredWatchlist =
-        watchlistData?.filter((item) => !watchedMovieIds.has(item.movie_id)) ||
-        [];
-
-      console.log("Total watchlist:", watchlistData?.length);
-      console.log("Watched movies:", watchedMovieIds.size);
-      console.log("Filtered (unwatched):", filteredWatchlist.length);
-
-      setWatchlist(filteredWatchlist);
+      if (error) throw error;
+      setWatched(data || []);
     } catch (error) {
-      console.error("Error fetching watchlist:", error.message);
-      Alert.alert("Error", "Failed to load watchlist");
+      console.error("Error fetching watched:", error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Hapus dari watchlist
-  const removeFromWatchlist = async (itemId, movieId, title) => {
-    Alert.alert("Remove", `Remove "${title}" from watchlist?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Remove",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const { error } = await supabase
-              .from("watchlist")
-              .delete()
-              .eq("id", itemId);
-
-            if (error) throw error;
-
-            setWatchlist(watchlist.filter((item) => item.id !== itemId));
-            Alert.alert("Success", "Movie removed from watchlist");
-          } catch (error) {
-            Alert.alert("Error", error.message);
-          }
-        },
-      },
-    ]);
-  };
-
   const onRefresh = async () => {
     setRefreshing(true);
     if (session?.user) {
-      await fetchWatchlist(session.user.id);
+      await fetchWatched(session.user.id);
     }
     setRefreshing(false);
   };
 
   const goToMovieDetail = (movieId) => {
     navigation.navigate("MovieDetail", { movieId });
+  };
+
+  const renderStars = (rating) => {
+    return (
+      <View style={styles.starsContainer}>
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
+          <Star
+            key={star}
+            size={12}
+            color={star <= rating ? colors.blue() : colors.grey(0.3)}
+            fill={star <= rating ? colors.blue() : "none"}
+          />
+        ))}
+      </View>
+    );
   };
 
   const renderItem = ({ item }) => (
@@ -137,20 +99,17 @@ const WatchlistScreen = () => {
         <Text style={styles.title} numberOfLines={2}>
           {item.title}
         </Text>
-        <View style={styles.ratingRow}>
-          <Text style={styles.rating}>⭐ {item.rating?.toFixed(1)}</Text>
-          <Text style={styles.year}>{item.year}</Text>
-        </View>
-        <Text style={styles.addedAt}>
-          Added on {new Date(item.added_at).toLocaleDateString()}
+        {renderStars(item.user_rating)}
+        <Text style={styles.ratingValue}>Rating: {item.user_rating}/10</Text>
+        {item.review && (
+          <Text style={styles.review} numberOfLines={2}>
+            "{item.review}"
+          </Text>
+        )}
+        <Text style={styles.date}>
+          Watched on {new Date(item.watched_at).toLocaleDateString()}
         </Text>
       </View>
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => removeFromWatchlist(item.id, item.movie_id, item.title)}
-      >
-        <Trash2 color={colors.red()} size={20} />
-      </TouchableOpacity>
     </TouchableOpacity>
   );
 
@@ -165,20 +124,20 @@ const WatchlistScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Watchlist</Text>
-        <Text style={styles.headerCount}>{watchlist.length} movies</Text>
+        <Text style={styles.headerTitle}>Watched Movies</Text>
+        <Text style={styles.headerCount}>{watched.length} movies</Text>
       </View>
 
-      {watchlist.length === 0 ? (
+      {watched.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyTitle}>Your watchlist is empty</Text>
+          <Text style={styles.emptyTitle}>No watched movies yet</Text>
           <Text style={styles.emptyText}>
-            Add movies from the detail page by tapping the bookmark icon
+            Rate movies you've watched from the detail page
           </Text>
         </View>
       ) : (
         <FlatList
-          data={watchlist}
+          data={watched}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.listContainer}
@@ -192,7 +151,7 @@ const WatchlistScreen = () => {
   );
 };
 
-export default WatchlistScreen;
+export default WatchedScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -232,7 +191,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.grey(0.05),
     borderRadius: 12,
     overflow: "hidden",
-    alignItems: "center",
   },
   poster: {
     width: 80,
@@ -242,35 +200,32 @@ const styles = StyleSheet.create({
   infoContainer: {
     flex: 1,
     padding: 12,
-    gap: 4,
+    gap: 6,
   },
   title: {
     fontFamily: "Pjs-Bold",
     fontSize: 14,
     color: colors.black(),
   },
-  ratingRow: {
+  starsContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    gap: 2,
   },
-  rating: {
+  ratingValue: {
+    fontFamily: "Pjs-Medium",
+    fontSize: 11,
+    color: colors.blue(),
+  },
+  review: {
     fontFamily: "Pjs-Medium",
     fontSize: 12,
     color: colors.grey(),
+    fontStyle: "italic",
   },
-  year: {
-    fontFamily: "Pjs-Regular",
-    fontSize: 11,
-    color: colors.grey(0.6),
-  },
-  addedAt: {
+  date: {
     fontFamily: "Pjs-Regular",
     fontSize: 10,
     color: colors.grey(0.6),
-  },
-  deleteButton: {
-    padding: 16,
   },
   emptyContainer: {
     flex: 1,

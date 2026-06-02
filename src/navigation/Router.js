@@ -4,18 +4,25 @@ import {
   TransitionPresets,
 } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Home, Search, PlusSquare, Heart, User } from "lucide-react-native";
+import {
+  Home,
+  Search,
+  PlusSquare,
+  Heart,
+  User,
+  CheckCircle,
+} from "lucide-react-native";
 import { colors } from "../../assets/theme";
 
 // Import Screens
 import HomeScreen from "../screens/Home";
 import SearchScreen from "../screens/Search";
 import WatchlistScreen from "../screens/Watchlist";
-import AddMovieScreen from "../screens/AddMovie";
 import ProfileScreen from "../screens/Profile";
 import MovieDetail from "../screens/MovieDetail";
 import Login from "../screens/Login";
 import Register from "../screens/Register";
+import WatchedScreen from "../screens/Watched";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -61,11 +68,11 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="Add"
-        component={AddMovieScreen}
+        name="Watched"
+        component={WatchedScreen}
         options={{
-          tabBarLabel: "Add",
-          tabBarIcon: ({ color }) => <PlusSquare color={color} size={24} />,
+          tabBarLabel: "Watched",
+          tabBarIcon: ({ color }) => <CheckCircle color={color} size={24} />,
         }}
       />
       <Tab.Screen
@@ -134,6 +141,16 @@ const Router = () => {
           gestureEnabled: true,
           gestureDirection: "horizontal",
           ...TransitionPresets.SlideFromRightIOS,
+        }}
+      />
+
+      <Tab.Screen
+        name="Watched"
+        component={WatchedScreen}
+        options={{
+          tabBarLabel: "Watched",
+          tabBarIcon: ({ color }) => <CheckCircle color={color} size={24} />,
+          headerShown: false,
         }}
       />
     </Stack.Navigator>

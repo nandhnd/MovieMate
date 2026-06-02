@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -15,41 +15,46 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { colors } from "../../assets/theme";
+import { supabase } from "../libs/supabase";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react-native";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [isLoginDisabled, setLoginDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
-  // Validasi form login
-  const updateLoginButtonStatus = () => {
-    if (email.trim() && password.trim()) {
-      setLoginDisabled(false);
-    } else {
-      setLoginDisabled(true);
-    }
-  };
-
-  useEffect(() => {
-    updateLoginButtonStatus();
-  }, [email, password]);
-
-  // Handle login
   const handleLogin = async () => {
-    setLoading(true);
-    // Simulasi proses login
-    setTimeout(() => {
-      setLoading(false);
-      navigation.replace("MainTabs");
-    }, 1500);
-  };
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Error", "Please fill all fields");
+      return;
+    }
 
-  const togglePasswordVisibility = () => {
-    setPasswordVisible(!passwordVisible);
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password,
+      });
+
+      if (error) {
+        if (error.message === "Invalid login credentials") {
+          Alert.alert("Error", "Invalid email or password");
+        } else {
+          Alert.alert("Error", error.message);
+        }
+        return;
+      }
+
+      if (data.session) {
+        navigation.replace("MainTabs");
+      }
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -67,7 +72,6 @@ const Login = () => {
               </Text>
 
               <View style={styles.form}>
-                {/* Email Input */}
                 <View>
                   <Text style={styles.label}>Email</Text>
                   <View style={styles.inputContainer}>
@@ -76,10 +80,7 @@ const Login = () => {
                       placeholder="Enter your email"
                       placeholderTextColor={colors.grey(0.6)}
                       value={email}
-                      onChangeText={(text) => {
-                        setEmail(text);
-                        updateLoginButtonStatus();
-                      }}
+                      onChangeText={setEmail}
                       inputMode="email"
                       keyboardType="email-address"
                       autoCapitalize="none"
@@ -88,7 +89,6 @@ const Login = () => {
                   </View>
                 </View>
 
-                {/* Password Input */}
                 <View>
                   <Text style={styles.label}>Password</Text>
                   <View style={styles.inputContainer}>
@@ -97,14 +97,13 @@ const Login = () => {
                       placeholder="Enter your password"
                       placeholderTextColor={colors.grey(0.6)}
                       value={password}
-                      onChangeText={(text) => {
-                        setPassword(text);
-                        updateLoginButtonStatus();
-                      }}
+                      onChangeText={setPassword}
                       secureTextEntry={!passwordVisible}
                       style={[styles.input, { flex: 1 }]}
                     />
-                    <TouchableOpacity onPress={togglePasswordVisibility}>
+                    <TouchableOpacity
+                      onPress={() => setPasswordVisible(!passwordVisible)}
+                    >
                       {passwordVisible ? (
                         <EyeOff size={18} color={colors.grey(0.6)} />
                       ) : (
@@ -118,16 +117,9 @@ const Login = () => {
 
             <View style={styles.bottomSection}>
               <TouchableOpacity
-                style={[
-                  styles.loginButton,
-                  {
-                    backgroundColor: isLoginDisabled
-                      ? colors.blue(0.5)
-                      : colors.blue(),
-                  },
-                ]}
+                style={[styles.loginButton, { backgroundColor: colors.blue() }]}
                 onPress={handleLogin}
-                disabled={isLoginDisabled}
+                disabled={loading}
                 activeOpacity={0.8}
               >
                 {loading ? (
@@ -156,10 +148,7 @@ const Login = () => {
 export default Login;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white(),
-  },
+  container: { flex: 1, backgroundColor: colors.white() },
   innerContainer: {
     flex: 1,
     justifyContent: "space-between",
@@ -178,9 +167,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 40,
   },
-  form: {
-    gap: 20,
-  },
+  form: { gap: 20 },
   label: {
     fontFamily: "Pjs-Medium",
     fontSize: 14,
@@ -203,14 +190,8 @@ const styles = StyleSheet.create({
     color: colors.black(),
     padding: 0,
   },
-  bottomSection: {
-    gap: 16,
-  },
-  loginButton: {
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
+  bottomSection: { gap: 16 },
+  loginButton: { borderRadius: 12, paddingVertical: 16, alignItems: "center" },
   loginButtonText: {
     color: colors.white(),
     fontSize: 14,
@@ -226,9 +207,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.grey(),
   },
-  registerLink: {
-    fontFamily: "Pjs-Bold",
-    fontSize: 14,
-    color: colors.blue(),
-  },
+  registerLink: { fontFamily: "Pjs-Bold", fontSize: 14, color: colors.blue() },
 });

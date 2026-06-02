@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { colors } from "../../assets/theme";
+import { supabase } from "../libs/supabase";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react-native";
 
 const Register = () => {
@@ -25,62 +26,67 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
-  const [isSignupDisabled, setSignupDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
-  // Validasi form registrasi
-  const updateSignupButtonStatus = () => {
-    if (
-      fullName.trim() &&
-      email.trim() &&
-      password.trim() &&
-      confirmPassword.trim()
-    ) {
-      setSignupDisabled(false);
-    } else {
-      setSignupDisabled(true);
-    }
-  };
-
-  useEffect(() => {
-    updateSignupButtonStatus();
-  }, [fullName, email, password, confirmPassword]);
-
-  // Handle registrasi dengan validasi
   const handleRegister = async () => {
-    let errorMessage = "";
+    if (
+      !fullName.trim() ||
+      !email.trim() ||
+      !password.trim() ||
+      !confirmPassword.trim()
+    ) {
+      Alert.alert("Error", "Please fill all fields");
+      return;
+    }
 
-    // Validasi password match
     if (password !== confirmPassword) {
-      errorMessage = "Password and confirmation password do not match.";
-    }
-    // Validasi panjang password minimal 8 karakter
-    else if (password.length < 8) {
-      errorMessage = "Password must be at least 8 characters long.";
-    }
-    // Validasi kombinasi huruf dan angka
-    else {
-      const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).+$/;
-      if (!passwordRegex.test(password)) {
-        errorMessage =
-          "Password must contain a combination of letters and numbers.";
-      }
+      Alert.alert("Error", "Passwords do not match");
+      return;
     }
 
-    if (errorMessage) {
-      Alert.alert("Registration Error", errorMessage);
+    if (password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters");
       return;
     }
 
     setLoading(true);
-    // Simulasi proses registrasi
-    setTimeout(() => {
+    try {
+      // Register dengan Supabase Auth
+      const { data: authData, error: signUpError } = await supabase.auth.signUp(
+        {
+          email: email,
+          password: password,
+          options: {
+            data: { full_name: fullName.trim() },
+          },
+        },
+      );
+
+      if (signUpError) throw signUpError;
+
+      if (authData.user) {
+        // Simpan data user ke tabel public.users
+        const { error: insertError } = await supabase.from("users").insert({
+          id: authData.user.id,
+          full_name: fullName.trim(),
+          email: email,
+          avatar_url:
+            "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500",
+          created_at: new Date().toISOString(),
+        });
+
+        if (insertError) console.error("Insert error:", insertError);
+
+        Alert.alert("Success", "Account created! Please login.", [
+          { text: "OK", onPress: () => navigation.navigate("Login") },
+        ]);
+      }
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
       setLoading(false);
-      Alert.alert("Success", "Account created successfully!", [
-        { text: "OK", onPress: () => navigation.navigate("Login") },
-      ]);
-    }, 1500);
+    }
   };
 
   return (
@@ -102,7 +108,6 @@ const Register = () => {
                 </Text>
 
                 <View style={styles.form}>
-                  {/* Full Name Input */}
                   <View>
                     <Text style={styles.label}>Full Name</Text>
                     <View style={styles.inputContainer}>
@@ -111,16 +116,12 @@ const Register = () => {
                         placeholder="Enter your full name"
                         placeholderTextColor={colors.grey(0.6)}
                         value={fullName}
-                        onChangeText={(text) => {
-                          setFullName(text);
-                          updateSignupButtonStatus();
-                        }}
+                        onChangeText={setFullName}
                         style={styles.input}
                       />
                     </View>
                   </View>
 
-                  {/* Email Input */}
                   <View>
                     <Text style={styles.label}>Email</Text>
                     <View style={styles.inputContainer}>
@@ -129,10 +130,7 @@ const Register = () => {
                         placeholder="Enter your email"
                         placeholderTextColor={colors.grey(0.6)}
                         value={email}
-                        onChangeText={(text) => {
-                          setEmail(text);
-                          updateSignupButtonStatus();
-                        }}
+                        onChangeText={setEmail}
                         inputMode="email"
                         keyboardType="email-address"
                         autoCapitalize="none"
@@ -141,7 +139,6 @@ const Register = () => {
                     </View>
                   </View>
 
-                  {/* Password Input */}
                   <View>
                     <Text style={styles.label}>Password</Text>
                     <View style={styles.inputContainer}>
@@ -150,10 +147,7 @@ const Register = () => {
                         placeholder="Create a password"
                         placeholderTextColor={colors.grey(0.6)}
                         value={password}
-                        onChangeText={(text) => {
-                          setPassword(text);
-                          updateSignupButtonStatus();
-                        }}
+                        onChangeText={setPassword}
                         secureTextEntry={!passwordVisible}
                         style={[styles.input, { flex: 1 }]}
                       />
@@ -167,12 +161,8 @@ const Register = () => {
                         )}
                       </TouchableOpacity>
                     </View>
-                    <Text style={styles.hintText}>
-                      Min. 8 characters with letters and numbers
-                    </Text>
                   </View>
 
-                  {/* Confirm Password Input */}
                   <View>
                     <Text style={styles.label}>Confirm Password</Text>
                     <View style={styles.inputContainer}>
@@ -181,10 +171,7 @@ const Register = () => {
                         placeholder="Confirm your password"
                         placeholderTextColor={colors.grey(0.6)}
                         value={confirmPassword}
-                        onChangeText={(text) => {
-                          setConfirmPassword(text);
-                          updateSignupButtonStatus();
-                        }}
+                        onChangeText={setConfirmPassword}
                         secureTextEntry={!confirmPasswordVisible}
                         style={[styles.input, { flex: 1 }]}
                       />
@@ -208,14 +195,10 @@ const Register = () => {
                 <TouchableOpacity
                   style={[
                     styles.signupButton,
-                    {
-                      backgroundColor: isSignupDisabled
-                        ? colors.blue(0.5)
-                        : colors.blue(),
-                    },
+                    { backgroundColor: colors.blue() },
                   ]}
                   onPress={handleRegister}
-                  disabled={isSignupDisabled}
+                  disabled={loading}
                   activeOpacity={0.8}
                 >
                   {loading ? (
@@ -247,13 +230,8 @@ const Register = () => {
 export default Register;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white(),
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
+  container: { flex: 1, backgroundColor: colors.white() },
+  scrollContent: { flexGrow: 1 },
   innerContainer: {
     flex: 1,
     justifyContent: "space-between",
@@ -272,9 +250,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 30,
   },
-  form: {
-    gap: 18,
-  },
+  form: { gap: 18 },
   label: {
     fontFamily: "Pjs-Medium",
     fontSize: 14,
@@ -297,21 +273,8 @@ const styles = StyleSheet.create({
     color: colors.black(),
     padding: 0,
   },
-  hintText: {
-    fontFamily: "Pjs-Regular",
-    fontSize: 10,
-    color: colors.grey(0.5),
-    marginTop: 6,
-  },
-  bottomSection: {
-    marginTop: 30,
-    gap: 16,
-  },
-  signupButton: {
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
+  bottomSection: { marginTop: 30, gap: 16 },
+  signupButton: { borderRadius: 12, paddingVertical: 16, alignItems: "center" },
   signupButtonText: {
     color: colors.white(),
     fontSize: 14,
@@ -322,14 +285,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  loginText: {
-    fontFamily: "Pjs-Medium",
-    fontSize: 14,
-    color: colors.grey(),
-  },
-  loginLink: {
-    fontFamily: "Pjs-Bold",
-    fontSize: 14,
-    color: colors.blue(),
-  },
+  loginText: { fontFamily: "Pjs-Medium", fontSize: 14, color: colors.grey() },
+  loginLink: { fontFamily: "Pjs-Bold", fontSize: 14, color: colors.blue() },
 });

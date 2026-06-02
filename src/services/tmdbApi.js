@@ -39,13 +39,37 @@ export const getPopularMovies = async (page = 1) => {
 
 // Fungsi untuk mencari film
 export const searchMovies = async (query, page = 1) => {
+  if (!query.trim()) return { results: [], total_pages: 0 };
+
   try {
     const response = await tmdbApi.get("/search/movie", {
-      params: { query, page },
+      params: {
+        query: query.trim(),
+        page,
+        include_adult: false,
+        language: "en-US",
+      },
     });
     return response.data;
   } catch (error) {
     console.error("Error searching movies:", error);
+    return { results: [], total_pages: 0 };
+  }
+};
+
+// Fungsi untuk mendapatkan film berdasarkan genre
+export const getMoviesByGenre = async (genreId, page = 1) => {
+  try {
+    const response = await tmdbApi.get("/discover/movie", {
+      params: {
+        with_genres: genreId,
+        page,
+        sort_by: "popularity.desc",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching movies by genre:", error);
     return { results: [], total_pages: 0 };
   }
 };

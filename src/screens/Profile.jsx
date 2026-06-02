@@ -74,10 +74,6 @@ const ProfileScreen = () => {
         },
       );
 
-      // =====================================================
-      // HITUNG WATCHLIST (HANYA FILM YANG BELUM DITONTON)
-      // =====================================================
-
       // 1. Ambil semua film di watchlist user
       const { data: watchlistData, error: watchlistError } = await supabase
         .from("watchlist")
